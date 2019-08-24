@@ -9,7 +9,7 @@ from TI2093RegSetting import *
 def main():
   print("Starting ECG ADS1293 library testing...")
   num_chunk = 1
-  duration_secs = 1.15
+  duration_secs = 1.30
   num_data_points = 1000
 
   try:

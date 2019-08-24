@@ -48,19 +48,16 @@ class ADS1293(object):
       self.spi_2 = spidev.SpiDev()
       self.spi_2.open(1, 2)
       self.spi_2.max_speed_hz = max_speed_hz
-      
+    
+
     GPIO.add_event_detect(self.GPIO_INPUT_PIN, GPIO.FALLING, callback=self.gpio_callback)
     self.isConnected = True
 
 
-  def gpio_callback(self, channel):
+  def gpio_event_loop_thread(self):
     data = []
 
-    # print("Called GPIO callback method.")
-      
-    self.adc_data_ready = self.adc_data_ready + 1
     if(self._is_hookable is True):
-      
       data_bytes = self.spi_stream_read_reg(LEAD_12_CHAN_1_DATA_SIZE, ECG_CHAN_1)
       data.append(data_bytes[1:])
 
@@ -73,6 +70,12 @@ class ADS1293(object):
       print("Data is not read able yet.")
 
     #print("{} Data {}".format(self.adc_data_ready, data))
+
+
+  def gpio_callback(self, channel):
+    # print("Called GPIO callback method.")
+    self.adc_data_ready = self.adc_data_ready + 1
+    self.gpio_event_loop_thread()
 
 
   def close(self):
