@@ -5,14 +5,6 @@ import time
 import RPi.GPIO as GPIO
 from enum import Enum
 
-ADS1293_ADCDataReady_ECG = 0
-
-
-def gpio_callback(channel):
-  global ADS1293_ADCDataReady_ECG
-  ADS1293_ADCDataReady_ECG = ADS1293_ADCDataReady_ECG + 1
-  # print("gpio callback called {}.".format(ADS1293_ADCDataReady_ECG))
-
 
 class ECG_LEAD_TYPE(Enum):
   LEAD_03 = 3
@@ -22,16 +14,18 @@ class ECG_LEAD_TYPE(Enum):
 
 class ADS1293(object):
 
-
   def __init__(self, maxpoint = 1000, leads=ECG_LEAD_TYPE.LEAD_12, max_speed_hz=15000000):
-    self._DATA_READY_SLEEP_INTERVAL = 0.009 #raspberry pi zero w required sleep mainly initially
-    self.TI_ADS1293_CONFIG_REG_VALUE = (0x00)
+    self._DATA_READY_SLEEP_INTERVAL   = 0.009 #raspberry pi zero w required sleep mainly initially
+    self.TI_ADS1293_CONFIG_REG_VALUE  = (0x00)
+    self.GPIO_INPUT_PIN               = 27
+
     self.counter = 0
     self.maxpoint = maxpoint
     self.leads = leads
+    self.adc_data_ready = 0
 
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(27, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(self.GPIO_INPUT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     
     self.spi_0 = None
     self.spi_1 = None
@@ -54,9 +48,13 @@ class ADS1293(object):
       self.spi_2.open(1, 2)
       self.spi_2.max_speed_hz = max_speed_hz
       
-    
-    GPIO.add_event_detect(27, GPIO.FALLING, callback=gpio_callback)
+    GPIO.add_event_detect(self.GPIO_INPUT_PIN, GPIO.FALLING, callback=self.gpio_callback)
     self.isConnected = True
+
+
+  def gpio_callback(self, channel):
+    # print("Called GPIO callback method.")
+    self.adc_data_ready = self.adc_data_ready + 1
 
 
   def close(self):
@@ -75,14 +73,12 @@ class ADS1293(object):
 
   @property
   def is_data_ready(self):
-    return ADS1293_ADCDataReady_ECG
+    return self.adc_data_ready
 
 
   def reset_data_ready(self):
-    global ADS1293_ADCDataReady_ECG
-
-    if(ADS1293_ADCDataReady_ECG > 0):
-      ADS1293_ADCDataReady_ECG = ADS1293_ADCDataReady_ECG - 1
+    if(self.adc_data_ready > 0):
+      self.adc_data_ready = self.adc_data_ready - 1
 
 
   @property
@@ -142,7 +138,6 @@ class ADS1293(object):
 
 
   def init_channel_lead12(self):
-
     self.spi_write_reg(TI_ADS1293_CONFIG_REG, self.TI_ADS1293_CONFIG_REG_VALUE, ECG_CHAN_1)
     self.spi_write_reg(TI_ADS1293_FLEX_CH1_CN_REG, 0x11, ECG_CHAN_1)
     self.spi_write_reg(TI_ADS1293_FLEX_CH2_CN_REG, 0x19, ECG_CHAN_1)
