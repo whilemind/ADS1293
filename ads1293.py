@@ -23,6 +23,7 @@ class ADS1293(object):
     self.maxpoint = maxpoint
     self.leads = leads
     self.adc_data_ready = 0
+    self._is_hookable = True
 
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(self.GPIO_INPUT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -53,11 +54,32 @@ class ADS1293(object):
 
 
   def gpio_callback(self, channel):
+    data = []
+
     # print("Called GPIO callback method.")
+      
     self.adc_data_ready = self.adc_data_ready + 1
+    if(self._is_hookable is True):
+      
+      data_bytes = self.spi_stream_read_reg(LEAD_12_CHAN_1_DATA_SIZE, ECG_CHAN_1)
+      data.append(data_bytes[1:])
+
+      data_bytes = self.spi_stream_read_reg(LEAD_12_CHAN_2_DATA_SIZE, ECG_CHAN_2)
+      data.append(data_bytes[1:])
+
+      data_bytes = self.spi_stream_read_reg(LEAD_12_CHAN_3_DATA_SIZE, ECG_CHAN_3)
+      data.append(data_bytes[1:])
+    else:
+      print("Data is not read able yet.")
+
+    #print("{} Data {}".format(self.adc_data_ready, data))
 
 
   def close(self):
+    # This sleep required to avoid unexpected exception to read data
+    self._is_hookable = False
+    time.sleep(self._DATA_READY_SLEEP_INTERVAL)
+
     self.spi_write_reg(TI_ADS1293_CONFIG_REG, self.TI_ADS1293_CONFIG_REG_VALUE)
     
     if(self.leads == ECG_LEAD_TYPE.LEAD_05):

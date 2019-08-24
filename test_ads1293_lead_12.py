@@ -9,7 +9,7 @@ from TI2093RegSetting import *
 def main():
   print("Starting ECG ADS1293 library testing...")
   num_chunk = 1
-  duration_secs = 1.0
+  duration_secs = 1.15
   num_data_points = 1000
 
   try:
@@ -28,32 +28,34 @@ def main():
     startTime = time.time()
     while(1):
       if(ads.is_data_ready > 0):
-        data_bytes = ads.spi_stream_read_reg(LEAD_12_CHAN_1_DATA_SIZE * num_chunk, ECG_CHAN_1)
+        # data_bytes = ads.spi_stream_read_reg(LEAD_12_CHAN_1_DATA_SIZE * num_chunk, ECG_CHAN_1)
         # print("Chan 1 Data is {}".format(data_bytes))
-        data_bytes = ads.spi_stream_read_reg(LEAD_12_CHAN_2_DATA_SIZE * num_chunk, ECG_CHAN_2)
+
+        # data_bytes = ads.spi_stream_read_reg(LEAD_12_CHAN_2_DATA_SIZE * num_chunk, ECG_CHAN_2)
         # print("Chan 2 Data is {}".format(data_bytes))
-        data_bytes = ads.spi_stream_read_reg(LEAD_12_CHAN_3_DATA_SIZE * num_chunk, ECG_CHAN_3)
+        
+        # data_bytes = ads.spi_stream_read_reg(LEAD_12_CHAN_3_DATA_SIZE * num_chunk, ECG_CHAN_3)
         # print("Chan 3 Data is {}".format(data_bytes))
 
-        ads.reset_data_ready()
+        # ads.reset_data_ready()
         i = i + 1
 
-        endTime = time.time()
-        diff = endTime - startTime
+        # endTime = time.time()
+        # diff = endTime - startTime
 
-        if(diff >= duration_secs):
-          print("<< {} secs required to read {} data points.".format(diff, (i * num_chunk)))
-          break
+        # if(diff >= duration_secs):
+        #   print("<< T {} secs required to read {} data points.".format(diff, ads.is_data_ready))
+        #   break
 
       else:
         # print("Sleeping is_data_ready {} and i {}.".format(ads.is_data_ready, i))
         time.sleep(ads.data_ready_sleep_interval)  
 
-      if(i == num_data_points):
+      if(ads.is_data_ready >= num_data_points):
         endTime = time.time()
         diff = endTime - startTime
 
-        print("<< {} secs required to read {} data points.".format(diff, (i * num_chunk)))
+        print("<< D {} secs required to read {} data points.".format(diff, ads.is_data_ready))
         break
 
   except Exception as e:
