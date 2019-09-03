@@ -17,7 +17,7 @@ class ADS1293(object):
   def __init__(self, maxpoint = 1000, leads=ECG_LEAD_TYPE.LEAD_12, max_speed_hz=15000000):
     self._DATA_READY_SLEEP_INTERVAL   = 0.009 #raspberry pi zero w required sleep mainly initially
     self.TI_ADS1293_CONFIG_REG_VALUE  = (0x00)
-    self.GPIO_INPUT_PIN               = 27
+    self.GPIO_INPUT_PIN               = 26
 
     self.counter = 0
     self.maxpoint = maxpoint
@@ -36,18 +36,22 @@ class ADS1293(object):
       self.spi_0.open(0, 0)
       self.spi_0.max_speed_hz = max_speed_hz
     elif (leads == ECG_LEAD_TYPE.LEAD_12):
-      self.spi_0 = spidev.SpiDev()
-      self.spi_0.open(1, 0)
-      self.spi_0.max_speed_hz = max_speed_hz
+      try:
+        self.spi_0 = spidev.SpiDev()
+        self.spi_0.open(1, 0)
+        self.spi_0.max_speed_hz = max_speed_hz
 
-      self.spi_1 = spidev.SpiDev()
-      self.spi_1.open(1, 1)
-      self.spi_1.max_speed_hz = max_speed_hz
 
-      self.spi_2 = spidev.SpiDev()
-      self.spi_2.open(1, 2)
-      self.spi_2.max_speed_hz = max_speed_hz
-      
+        self.spi_1 = spidev.SpiDev()
+        self.spi_1.open(1, 2)
+        self.spi_1.max_speed_hz = max_speed_hz
+
+        self.spi_2 = spidev.SpiDev()
+        self.spi_2.open(1, 1)
+        self.spi_2.max_speed_hz = max_speed_hz
+      except Exception as e:
+        print("Exception is {}".format(e))
+
     GPIO.add_event_detect(self.GPIO_INPUT_PIN, GPIO.FALLING, callback=self.gpio_callback)
     self.isConnected = True
 
