@@ -61,6 +61,10 @@ class ADS1293(object):
     self.adc_data_ready = self.adc_data_ready + 1
 
 
+  # def gpio_clear(self):
+  #   GPIO.cleanup()
+
+
   def close(self):
     self.spi_write_reg(TI_ADS1293_CONFIG_REG, self.TI_ADS1293_CONFIG_REG_VALUE)
     
@@ -72,6 +76,7 @@ class ADS1293(object):
       self.spi_2.close()
 
     GPIO.cleanup()
+    # self.gpio_clear()
     self.isConnected = False
 
 
@@ -83,6 +88,7 @@ class ADS1293(object):
   def reset_data_ready(self):
     if(self.adc_data_ready > 0):
       self.adc_data_ready = self.adc_data_ready - 1
+    # self.adc_data_ready = 0
 
 
   @property
